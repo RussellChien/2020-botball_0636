@@ -331,7 +331,7 @@ void forward_gyro(float dist, int speed) {
   clear_motor_position_counter(MOT_LEFT);
   clear_motor_position_counter(MOT_RIGHT);
   while(get_motor_position_counter(MOT_LEFT) < dist * CM_TO_BEMF) {
-    double val = ((double) {(abs(GYRO) == 1 ? gyro_x() : (abs(GYRO) == 2 ? gyro_y() : gyro_z()))} - gyro_dev) * 1;
+    double val = ((double) {(GYRO == 1 ? gyro_x() : (GYRO == 2 ? gyro_y() : gyro_z()))} - gyro_dev) * 1;
     mav(MOT_LEFT, left_speed);
     mav(MOT_RIGHT, right_speed);
     offset += val;
@@ -341,6 +341,7 @@ void forward_gyro(float dist, int speed) {
   }
   drive_freeze();
 }
+
 
 void calc_dev() {
    msleep(500);
@@ -354,8 +355,7 @@ void calc_dev() {
   gyro_x(); gyro_y(); gyro_z();
   for (i = 0; i < time / interval; ++i) {
     // determine gyro value based on wallaby orientation
-    double val = (double) {(abs(GYRO) == 1 ? gyro_x() : (abs(GYRO) == 2 ? gyro_y() : gyro_z()))};
-    printf("%d\n", val);
+    double val = (double) {(GYRO) == 1 ? gyro_x() : (GYRO) == 2 ? gyro_y() : gyro_z()};
     if (val <= 100) {
     	sum += val;
     } else {

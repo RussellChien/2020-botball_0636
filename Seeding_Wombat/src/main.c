@@ -1,32 +1,37 @@
 #include <kipr/wombat.h>
 #include <drive.h>
 
-//motors
-#define LEFT_MOTOR 0
-#define RIGHT_MOTOR 1
-#define CLAW 2
-
 //servos
 #define PUSHER 0
+#define CLAW 1
 #define COMPRESSER
+#define GRABBER 
 
-//sensors
+//digital sensors
+#define LEFT_TOUCH 0 
+#define RIGHT_TOUCH 1
+
+//analog sensors 
+#define LEFT_LIGHT 0
 
 //light values 
 #define LIGHT 
+#define BLACK 3900
+
 
 //claw values
-#define CLAW_OPEN 0
-#define CLAW_CLOSE CLAW_OPEN + 500
+#define CLAW_OPEN 1250
+#define CLAW_CLOSE 0
 
 //pusher values
-#define PUSHER_DOWN 1980
+#define PUSHER_DOWN 1950
 #define PUSHER_START 0
 
 //compresser values
 #define COMPRESSER_UP 
 #define COMPRESSER_DOWN 
 
+//grabber values 
 
 
 /*
@@ -89,16 +94,16 @@ int findObject(){
     else{
         return 0;
     }
-}
+}*/
 
 void line_follow(int dist, int speed) { 
     drive(speed, speed);
     long leftTarg = gmpc(MOT_LEFT) + 150 * dist;
     long rightTarg = gmpc(MOT_RIGHT) + 150 * dist;
     while (gmpc(MOT_RIGHT) < rightTarg || gmpc(MOT_LEFT) < leftTarg) {
-        if (analog(left_light) > black)
+        if (analog(LEFT_LIGHT) > BLACK)
             drive(speed * .75, speed * 1.25);
-        else if (analog(right_light) > black)
+        else if (analog(LEFT_LIGHT) < BLACK)
             drive(speed * 1.25, speed * .75);
         else
             drive(speed, speed);
@@ -109,66 +114,66 @@ void line_follow(int dist, int speed) {
 
 void line_sense(int speed) {    
     drive(speed * SPD_L_F / MAX_SPEED, speed * SPD_R_F / MAX_SPEED);
-    while (analog(left_light) < black || analog(right_light) < black) {
-        if (analog(right_light) > black)
-            drive(speed * SPD_L_F / MAX_SPEED, 0);
-        else if (analog(left_light) > black)
-            drive(0, speed * SPD_R_F / MAX_SPEED);
-        else if (analog(left_light) <= black && analog(right_light) <= black)
-            drive(speed, speed);
+    while (analog(LEFT_LIGHT) < BLACK) {
+        drive(speed, speed);
         msleep(1);
     }
     printf("black line sensed\n");
     ao();
 } 
-*/
-void slow_servo(int port, int pos) {
 
-    while(get_servo_position(port) > pos) {
-        set_servo_position(port, get_servo_position(port)-5);
-        msleep(8);
-    }
 
-    while(get_servo_position(port) < pos) {
-        set_servo_position(port, get_servo_position(port)+5);
-        msleep(8);
-    }
-}
-
-/*void slow_servo(int port, int start, int end) {
-    int i = 0;
-    for(i; i < 30; i++) {
-        start += (end - start)/30;
-        set_servo_position(port, start);        
-        msleep(100);
-    }
-}*/
-
-void turn_left(int speed, int time){
-    mav(MOT_LEFT, -speed);
-    mav(MOT_RIGHT, speed);
-    msleep(time);
-    ao();
-}
-
-void turn_right(int speed, int time){
-    mav(MOT_LEFT, speed);
-    mav(MOT_RIGHT, -speed);
-    msleep(time);
-    ao();
-}
-
-/*void square_up(int speed, double change){
-    while(left_touch == 0 && right_touch == 0){
-        if(left_touch == 1){
-            turn_right(-speed, 10);
+void slow_servo(int port, int dest)
+{
+    int pos = get_servo_position(port);
+    if (dest > pos) 
+    {
+        while (pos < dest) 
+        {
+            pos += 1;
+            set_servo_position(port, pos);
+            msleep(1);
         }
-        else if(right_touch == 1){
-            turn_left(-speed, 10);
-        }
-        move(-speed, 10, change);
     }
-} */
+    else
+    {
+        while (pos > dest) 
+        {
+            pos -= 1;
+            set_servo_position(port, pos);
+            msleep(1);
+        }
+    }
+}
+
+void square_up(int speed){
+    while(LEFT_TOUCH == 0 && RIGHT_TOUCH == 0){
+        if(LEFT_TOUCH == 1){
+            drive(-speed, 10);
+        }
+        else if(RIGHT_TOUCH == 1){
+            drive(-speed, 10);
+        }
+        drive(-speed, -speed);
+    }
+} 
+
+void angle_left() {
+    while(1) {
+        left(1, 0);
+        msleep(10);
+    }
+}
+
+void push_bin() {
+    thread t = thread_create(angle_left);
+    forward(5); 
+    thread_start(t);
+    forward(30);
+    thread_wait(t);
+    thread_destroy(t);
+}
+
 /*void light_start(){
     while(right_button());
     int max = 0,
@@ -211,19 +216,21 @@ int main(){
     enable_servos();    
     //starting positions
   	set_servo_position(PUSHER, PUSHER_START);
-    //need to clear motor counter for claw
+    set_servo_position(CLAW, CLAW_OPEN);
     //micro servo compressor 
-    //start 
+    //starts with claw facing material transport 
     //shut_down_in(119);
-    
+    square_up(50);
+    forward(40);
     //grabbing material transport 
+    
     
     //pushing the titanium bin 
     set_servo_position(PUSHER, PUSHER_DOWN); 
-    left(15, 0);
-    forward(30);
+    push_bin();
     
     //moving into position under bridge to meet with create 
+    
     
 
     
