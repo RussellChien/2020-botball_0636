@@ -425,3 +425,11 @@ void light_start () {
 
   while (LIGHT_S() > avg && !(right_button())) msleep(50);
 }
+
+
+
+
+
+
+
+

@@ -158,21 +158,6 @@ void square_up(int speed){
     }
 } 
 
-void angle_left() {
-    while(1) {
-        left(1, 0);
-        msleep(10);
-    }
-}
-
-void push_bin() {
-    thread t = thread_create(angle_left);
-    forward(5); 
-    thread_start(t);
-    forward(30);
-    thread_wait(t);
-    thread_destroy(t);
-}
 
 /*void light_start(){
     while(right_button());
@@ -211,23 +196,34 @@ void push_bin() {
         msleep(50);
 } */
 
-int main(){
+int main() {
    
     enable_servos();    
     //starting positions
-  	set_servo_position(PUSHER, PUSHER_START);
+  	/*
+    set_servo_position(PUSHER, PUSHER_START);
     set_servo_position(CLAW, CLAW_OPEN);
+    */
     //micro servo compressor 
     //starts with claw facing material transport 
     //shut_down_in(119);
-    square_up(50);
+    /*
+    square_up(10);
     forward(40);
+    */
     //grabbing material transport 
+    /*
+    line_sense(-1000);
+    backward(40);
+    square_up(1000);
+    forward(20);
+    right(90, 0);
     
-    
+    */
     //pushing the titanium bin 
-    set_servo_position(PUSHER, PUSHER_DOWN); 
-    push_bin();
+    set_servo_position(PUSHER, PUSHER_DOWN);     
+    left(15, 0);
+    backward_speed(30, 1000);
     
     //moving into position under bridge to meet with create 
     
