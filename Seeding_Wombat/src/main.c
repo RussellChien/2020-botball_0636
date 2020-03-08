@@ -4,8 +4,8 @@
 //servos
 #define PUSHER 0
 #define CLAW 1
-#define COMPRESSER
-#define GRABBER 
+#define COMPRESSOR 2
+#define GRABBER 3
 
 //digital sensors
 #define LEFT_TOUCH 0 
@@ -13,25 +13,26 @@
 
 //analog sensors 
 #define LEFT_LIGHT 0
+#define RIGHT_LIGHT 1
 
 //light values 
 #define LIGHT 
-#define BLACK 3900
-
+#define WHITE 2500
+#define BLACK 3700
 
 //claw values
-#define CLAW_OPEN 1250
+#define CLAW_OPEN 1200
 #define CLAW_CLOSE 0
 
 //pusher values
-#define PUSHER_DOWN 1950
+#define PUSHER_DOWN 1925
 #define PUSHER_START 0
 
-//compresser values
-#define COMPRESSER_UP 
-#define COMPRESSER_DOWN 
+//grabber values
+#define GRABBER_UP 1385
+#define GRABBER_DOWN 500
 
-//grabber values 
+//compressor values 
 
 
 /*
@@ -113,12 +114,35 @@ void line_follow(int dist, int speed) {
 }
 
 void line_sense(int speed) {    
+    int i;
+    int left_black = 0;
+    int right_black = 0;
+    for(i = 0; i < 10; i++) {
+    	left_black += analog(LEFT_LIGHT);
+    	right_black += analog(RIGHT_LIGHT);
+    }
+    left_black /= 10;
+    right_black /= 10;
+    left_black += 400;
+    right_black += 400;
     drive(speed * SPD_L_F / MAX_SPEED, speed * SPD_R_F / MAX_SPEED);
-    while (analog(LEFT_LIGHT) < BLACK) {
-        drive(speed, speed);
+    while (analog(LEFT_LIGHT) < left_black || analog(RIGHT_LIGHT) < right_black) {
+        if (analog(LEFT_LIGHT) > left_black) {
+            drive(0, speed * SPD_R_F / MAX_SPEED);
+        }
+        else if (analog(RIGHT_LIGHT) > right_black) {
+            drive(speed * SPD_L_F / MAX_SPEED, 0);
+        }
+        else if (analog(LEFT_LIGHT) <= left_black && analog(RIGHT_LIGHT) <= right_black) {
+            drive(speed, speed);
+        }
         msleep(1);
     }
     printf("black line sensed\n");
+   	mav(MOT_LEFT, -15);
+    msleep(20);
+    freeze(MOT_LEFT);
+    freeze(MOT_RIGHT);
     ao();
 } 
 
@@ -145,18 +169,6 @@ void slow_servo(int port, int dest)
         }
     }
 }
-
-void square_up(int speed){
-    while(LEFT_TOUCH == 0 && RIGHT_TOUCH == 0){
-        if(LEFT_TOUCH == 1){
-            drive(-speed, 10);
-        }
-        else if(RIGHT_TOUCH == 1){
-            drive(-speed, 10);
-        }
-        drive(-speed, -speed);
-    }
-} 
 
 
 /*void light_start(){
@@ -196,42 +208,72 @@ void square_up(int speed){
         msleep(50);
 } */
 
+void grab_transport() {
+    forward(18); 
+    msleep(1000);
+    set_servo_position(GRABBER, GRABBER_DOWN);
+    msleep(1000);
+    backward_speed(35, 1000); 
+    set_servo_position(GRABBER, GRABBER_UP);
+    forward(10);
+    set_servo_position(CLAW, CLAW_CLOSE);
+    set_servo_position(GRABBER, GRABBER_DOWN);
+    msleep(1000);
+}
+
+void push_bin() {
+    set_servo_position(PUSHER, PUSHER_DOWN);     
+    left(10, 0);
+    backward_speed(50, 1000);
+    right(10, 0);
+    backward_speed(30, 1000);
+}
+
+
 int main() {
    
     enable_servos();    
     //starting positions
-  	/*
     set_servo_position(PUSHER, PUSHER_START);
     set_servo_position(CLAW, CLAW_OPEN);
-    */
-    //micro servo compressor 
-    //starts with claw facing material transport 
+    set_servo_position(GRABBER, GRABBER_UP);
+    
     //shut_down_in(119);
-    /*
-    square_up(10);
-    forward(40);
-    */
-    //grabbing material transport 
-    /*
-    line_sense(-1000);
-    backward(40);
+    //starts with claw facing forward
     square_up(1000);
-    forward(20);
+    msleep(500);
+    line_sense(1250); 
+    msleep(1000);
+    backward(3);
+    msleep(1000);
     right(90, 0);
-    
-    */
+    msleep(1000);
+    forward(5);
+    line_sense(750);
+    msleep(1000);
+    //grabbing material transport 
+    grab_transport();
+    backward(20);
+    square_up(1000);
+    msleep(1000);
+    forward(15);
+    msleep(1000);
+    //turns toward bin 
+    right(90, 0);
+    msleep(1000);
     //pushing the titanium bin 
-    set_servo_position(PUSHER, PUSHER_DOWN);     
-    left(15, 0);
-    backward_speed(30, 1000);
+    push_bin();
+    forward(50); 
+    msleep(1000);
+    set_servo_position(PUSHER, PUSHER_START);
+    msleep(1000);
+	line_sense(1000);
+    msleep(1000);
     
+   
     //moving into position under bridge to meet with create 
     
-    
-
-    
-    
-    
+    //disable_servos();
     
     return 0;
 

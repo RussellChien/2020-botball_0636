@@ -27,10 +27,10 @@
 #define BEMFS_PER_ROTATION 1500 // Motor ticks per rotation. KIPR says this value should be around 1500.
 
 // Tuning Constants
-#define SPD_L_F 1245 // Left forward speed. Max is 1500.
-#define SPD_R_F 1300 // Right forward speed. Max is 1500.
-#define SPD_L_B 1245 // Left backward speed. Max is 1500.
-#define SPD_R_B 1300 // Right backward speed. Max is 1500.
+#define SPD_L_F 1500 // Left forward speed. Max is 1500.
+#define SPD_R_F 1465 // Right forward speed. Max is 1500.
+#define SPD_L_B 1500 // Left backward speed. Max is 1500.
+#define SPD_R_B 1465 // Right backward speed. Max is 1500.
 
 /* Gyro Constants
  * GYRO defines the orientation of the wallaby
@@ -143,6 +143,8 @@ void calc_dev();
 void lineFollow(int speed, int ms, int side, int port);
 
 void light_start ();
+
+void square_up(int speed);
 
 #endif
 

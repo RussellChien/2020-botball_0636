@@ -427,6 +427,22 @@ void light_start () {
 }
 
 
+void square_up(int speed){
+    //left 0 right 1
+    while(digital(0) == 0 && digital(1) == 0){
+        if(digital(0) == 1){
+            mav(MOT_RIGHT, -speed);
+        }
+        else if(digital(1) == 1){
+            mav(MOT_LEFT, -speed);
+        }
+        else {
+        	backward_speed(1, speed);
+        }
+    }
+} 
+
+
 
 
 
